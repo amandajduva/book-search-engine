@@ -4,7 +4,11 @@ const { signToken } = require('../utils/auth');
 
 const resolvers = {
   Query: {
-    
+    me: async (_, __, context) => {
+        if (context.user) {
+            return await User.findOne({ _id: context.user._id });
+        } throw new AuthenticationError('Not logged in!')
+    }
   },
 
   Mutation: {
@@ -30,7 +34,24 @@ const resolvers = {
 
       return { token, user };
     },
-    
+    saveBook: async (_, { newBook }, context) => {
+        if (context.user) {
+            return await User.findOneAndUpdate(
+                { _id: context.user._id },
+                { $push: { savedBooks: newBook }},
+                { new: true }
+            )
+        } throw new AuthenticationError('Not logged in!');
+    },
+    removeBook: async (_, { bookId }, context) => {
+        if (context.user) {
+            return await User.findOneAndUpdate(
+                { _id: context.user._id },
+                { $pull: { savedBooks: { bookId }}},
+                { new: true }
+            )
+        } throw new AuthenticationError('Not logged in!');
+    }
   },
 };
 
